@@ -1,14 +1,3 @@
-opcao_operacao = """
-
-[1] Depositar
-[2] Sacar
-[3] Saldo
-[4] Extrato
-[5] Criar usuário
-[6] Criar conta
-[0] Sair
-
-=> """
 
 def deposito(saldo_conta, valor_deposito, extrato, /):
     if valor_deposito > 0:
@@ -47,45 +36,69 @@ def fun_extrato(saldo_conta, /, *, extrato):
         print("==========================================")
         return extrato
 
-def criar_user(dados, lista_cpf):
+def filtrar_usuario(cpf, dados):
+    usuarios_filtrados = [usuario for usuario in dados if usuario["cpf"] == cpf]
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+def criar_user(dados):
+    cpf = input("Informe o CPF (somente número): ")
+    usuario = filtrar_usuario(cpf, dados)
+    print(usuario)
+    if usuario:
+        print("\nJá existe usuário com esse CPF!")
+        return
     nome = input("Qual é o seu nome? ")
     idade = int(input("Qual é a sua idade? "))
     endereço = input("Qual é o seu endereço? obs: rua - numero/apt - bairro - uf ")
-    cpf = input("Qual é o seu cpf? obs:somente numeros ")
-    cpf = cpf.replace(".", "")
-    if len(cpf) == 11:
-        if cpf in lista_cpf:
-            print("Este CPF já pertence a um usuário.")
-        else:
-            dados.append([nome, idade, endereço, cpf])
-            lista_cpf.append(cpf)
-            print("Usuário criado com sucesso!")
-    else:
-        print("Erro, cpf inválido") 
-        
-    return dados, lista_cpf
+    dados.append({"nome": nome, "idade": idade, "cpf": cpf, "endereço": endereço})
+    print("Usuário criado com sucesso!")
+    print(dados)
+    return dados
 
-def criar_conta(contas, proxima_conta, /):
-    agencia = "0001"
-    usuario = input("Qual é o seu usuário? ")
-    numero_conta = proxima_conta
-    proxima_conta += 1
-    if numero_conta in contas:
-        print("Essa conta já pertence a um usuário.")
-    else:
-        contas.append([agencia, numero_conta, usuario])
-        print("Conta criada com sucesso!")
-    return contas, proxima_conta
+def criar_conta(contas, dados, /):
+    AGENCIA = "0001"
+    cpf = input("Informe o CPF (somente número): ")
+    usuario = filtrar_usuario(cpf, dados)
+    print(usuario)
+    
+    if usuario:
+        numero_conta = len(contas) + 1
+        contas.append({"agencia": AGENCIA, "numero_conta": numero_conta, "usuario": usuario})
+        print("\n=== Conta criada com sucesso! ===")
+        print(contas)
+        return contas
+    print("\n@@@ Usuário não encontrado, fluxo de criação de conta encerrado! @@@")     
+
+def listar_contas(contas):
+    for conta in contas:
+        linha = f"""\
+            Agência:\t{conta['agencia']}
+            C/C:\t\t{conta['numero_conta']}
+            Titular:\t{conta['usuario']['nome']}
+        """
+        print("=" * 100)
+        print(linha)
 
 def main():    
 
     dados = []
-    lista_cpf = [] 
     contas = []
-    proxima_conta = 1
     limite_saque = 0
     saldo_conta = 0
     extrato = ""
+
+    opcao_operacao = """
+
+[1] Depositar
+[2] Sacar
+[3] Saldo
+[4] Extrato
+[5] Criar usuário
+[6] Criar conta
+[7] lista contas
+[0] Sair
+
+=> """
 
     print("----------------------------------------------BEM VINDO-------------------")
     print("Caro cliente, qual operação você deseja realizar? ")
@@ -109,10 +122,13 @@ def main():
             extrato = fun_extrato(saldo_conta, extrato = extrato)
             
         elif opcao_menu == 5: #criar user
-            dados, lista_cpf = criar_user(dados, lista_cpf)
+            dados = criar_user(dados)
             
         elif opcao_menu == 6: #criar conta
-           contas, proxima_conta = criar_conta(contas, proxima_conta)
+           contas = criar_conta(contas, dados)
+
+        elif opcao_menu == 7: #criar conta
+           contas = listar_contas()
             
         elif opcao_menu == 0: #sair
             print("você escolheu sair, obrigado.")
